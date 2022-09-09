@@ -1,0 +1,93 @@
+BIOSVendor: "Apple Inc."
+BIOSVersion: "1916.0.3.0.0"
+BIOSLegacyVersion: "MBP162.88Z.F000.B00.2205210114"
+BIOSReleaseDate: "05/21/2022"
+SystemManufacturer: "Apple Inc."
+SystemProductName: "MacBookPro16,2"
+SystemVersion: "1.0"
+# Note, this one is used by macserial
+SystemSerialNumber: "C02CL0YYML7H"
+SystemSKUNumber: ""
+SystemFamily: "MacBook Pro"
+BoardManufacturer: "Apple Inc."
+BoardProduct: "Mac-5F9802EFE386AA28"
+BoardVersion: "MacBookPro16,2"
+BoardRevision: 0x6
+BoardAssetTag: ""
+BoardType: 0xA
+BoardLocationInChassis: ""
+ChassisManufacturer: "Apple Inc."
+ChassisType: 0x9
+ChassisVersion: "Mac-5F9802EFE386AA28"
+ChassisAssetTag: ""
+PlatformFeature: 0x3A
+FirmwareFeatures: 0xFFAFF06E
+FirmwareFeaturesMask: 0xFFFFFF7F
+ExtendedFirmwareFeatures: 0x00000008FFAFF06E
+ExtendedFirmwareFeaturesMask: 0x00000008FFFFFF7F
+MemoryFormFactor: 0xD
+ProcessorType:
+  - 0x060B
+# FIXME: Correct this one
+ProcessorBusSpeed:
+  - 12345
+SmcGeneration: 3
+SmcPlatform:
+  - 0x6a
+  - 0x32
+  - 0x31
+  - 0x34
+  - 0x6b
+  - 0x00
+  - 0x00
+  - 0x00
+OEMStrings: |-
+  Apple ROM Version
+    BIOS ID:      MBP162.88Z.F000.B00.2205210114
+    Model:        MBP162
+    EFI Version:  1916.0.3.0.0
+    Built by:     root@gdg7v
+    Date:         Sat May 21 01:14:46 2022
+    Revision:     1916.0.3 (B&I)
+    ROM Version:  F000_B00
+    Build Type:   Official Build, RELEASE
+    Compiler:     clang-1400.0.17.3.1
+    UUID:         68652F7C-7E3E-37D0-8B7B-89A293636ADC
+    UUID:         996EA076-1BBE-39ED-97FB-8E07C2F138D0
+Specifications:
+  CPUCodename:
+    - "Ice Lake U"
+    - "Ice Lake U"
+  CPU:
+    - "Intel Core i5-1038NG7 @ 2.00 GHz"
+    - "Intel Core i7-1068NG7 @ 2.30 GHz"
+  GPU:
+    - "Intel Iris Plus Graphics"
+  RAM:
+    - "16 GB 3733 MHz LPDDR4X SDRAM"
+  SystemReportName:
+    - "MacBook Pro (13-inch, 2020, Four Thunderbolt 3 ports)"
+  MarketingName:
+    - "MacBook Pro (13-inch, 2020, Four Thunderbolt 3 ports)"
+# Note, first model code is used by macserial
+AppleModelCode:
+  - "ML7H"
+  - "ML7L"
+  - "ML7K"
+  - "ML87"
+  - "ML86"
+  - "ML85"
+  - "ML7M"
+  - "ML7J"
+  - "ML88"
+  - "0DHT"
+# Note, first board code is used by macserial
+AppleBoardCode:
+  - "P8PG"
+# Note, first year is used by macserial
+AppleModelYear:
+  - 2020
+  - 2021
+MinimumOSVersion: "10.15.4"
+MaximumOSVersion: null
+AppleModelId: "J214K"

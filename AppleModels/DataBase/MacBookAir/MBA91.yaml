@@ -1,0 +1,101 @@
+BIOSVendor: "Apple Inc."
+BIOSVersion: "1916.0.3.0.0"
+BIOSLegacyVersion: "MBA91.88Z.F000.B00.2205210115"
+BIOSReleaseDate: "05/21/2022"
+SystemManufacturer: "Apple Inc."
+SystemProductName: "MacBookAir9,1"
+SystemVersion: "1.0"
+# Note, this one is used by macserial
+SystemSerialNumber: "FVFCC20JMNHP"
+SystemSKUNumber: ""
+SystemFamily: "MacBook Air"
+BoardManufacturer: "Apple Inc."
+BoardProduct: "Mac-0CFF9C7C2B63DF8D"
+BoardVersion: "MacBookAir9,1"
+BoardRevision: 0x4
+BoardAssetTag: ""
+BoardType: 0xA
+BoardLocationInChassis: ""
+ChassisManufacturer: "Apple Inc."
+ChassisType: 0x9
+ChassisVersion: "Mac-0CFF9C7C2B63DF8D"
+ChassisAssetTag: ""
+PlatformFeature: 0x3A
+FirmwareFeatures: 0xFFAFF06E
+FirmwareFeaturesMask: 0xFFFFFF7F
+ExtendedFirmwareFeatures: 0x00000008FFAFF06E
+ExtendedFirmwareFeaturesMask: 0x00000008FFFFFF7F
+MemoryFormFactor: 0xD
+ProcessorType:
+  - 0x070B
+# FIXME: Correct this one
+ProcessorBusSpeed:
+  - 12345
+SmcGeneration: 3
+SmcPlatform:
+  - 0x6a
+  - 0x32
+  - 0x33
+  - 0x30
+  - 0x6b
+  - 0x00
+  - 0x00
+  - 0x00
+OEMStrings: |-
+  Apple ROM Version
+    BIOS ID:      MBA91.88Z.F000.B00.2205210115
+    Model:        MBA91
+    EFI Version:  1916.0.3.0.0
+    Built by:     root@5zsgm
+    Date:         Sat May 21 01:15:01 2022
+    Revision:     1916.0.3 (B&I)
+    ROM Version:  F000_B00
+    Build Type:   Official Build, RELEASE
+    Compiler:     clang-1400.0.17.3.1
+    UUID:         68652F7C-7E3E-37D0-8B7B-89A293636ADC
+    UUID:         996EA076-1BBE-39ED-97FB-8E07C2F138D0
+Specifications:
+  CPUCodename:
+    - "Ice Lake Y"
+    - "Ice Lake Y"
+    - "Ice Lake Y"
+  CPU:
+    - "Intel Core i3-1000NG4 @ 1.10 GHz"
+    - "Intel Core i5-1030NG7 @ 1.10 GHz"
+    - "Intel Core i7-1060NG7 @ 1.20 GHz"
+  GPU:
+    - "Intel Iris Plus Graphics"
+  RAM:
+    - "8 GB 3733 MHz LPDDR4X SDRAM"
+  SystemReportName:
+    - "MacBook Air (Retina, 13-inch, 2020)"
+  MarketingName:
+    # FIXME
+    - "MacBook Air (Retina, 13-inch, 2020)"
+# Note, first model code is used by macserial
+AppleModelCode:
+  - "MNHP"
+  - "MNHY"
+  - "MNHX"
+  - "MNHR"
+  - "MNHQ"
+  - "M6KL"
+  - "M6KM"
+  - "M6KH"
+  - "M6KJ"
+  - "M6KK"
+  - "M6KG"
+  - "MNJ0"
+  - "MLVD"
+  - "MLVF"
+  - "Q72V"
+# Note, first board code is used by macserial
+# FIXME: check
+AppleBoardCode:
+  - "0000"
+# Note, first year is used by macserial
+AppleModelYear:
+  - 2020
+MinimumOSVersion: "10.15.3"
+MaximumOSVersion: null
+AppleModelId: "J230K"

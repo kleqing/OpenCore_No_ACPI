@@ -1,0 +1,105 @@
+BIOSVendor: "Apple Inc."
+BIOSVersion: "1916.0.3.0.0"
+BIOSLegacyVersion: "IM201.88Z.F000.B00.2205210113"
+BIOSReleaseDate: "05/21/2022"
+SystemManufacturer: "Apple Inc."
+SystemProductName: "iMac20,1"
+SystemVersion: "1.0"
+# Note, this one is used by macserial
+SystemSerialNumber: "C02D38RCPN5T"
+SystemSKUNumber: ""
+SystemFamily: "iMac"
+BoardManufacturer: "Apple Inc."
+# This and similar ones can be an array itself, like this:
+# BoardProduct:
+#  "Mac-CFF7D910A743CAAF"
+#  "Mac-smthelse"
+BoardProduct: "Mac-CFF7D910A743CAAF"
+BoardVersion: "iMac20,1"
+BoardRevision: 0x3
+BoardAssetTag: ""
+BoardType: 0xA
+BoardLocationInChassis: ""
+ChassisManufacturer: "Apple Inc."
+ChassisType: 0xD
+ChassisVersion: "Mac-CFF7D910A743CAAF"
+ChassisAssetTag: ""
+PlatformFeature: 0x20
+FirmwareFeatures: 0xFFB3F066
+FirmwareFeaturesMask: 0xFFFFFFFF
+ExtendedFirmwareFeatures: 0x00000008FFB3F066
+ExtendedFirmwareFeaturesMask: 0x00000008FFFFFFFF
+MemoryFormFactor: 0x9
+# FIXME: Correct this one
+ProcessorType:
+  - 0x1009
+# FIXME: Correct this one
+ProcessorBusSpeed:
+  - 12345
+SmcGeneration: 3
+SmcPlatform:
+  - 0x6a
+  - 0x31
+  - 0x38
+  - 0x35
+  - 0x00
+  - 0x00
+  - 0x00
+  - 0x00
+OEMStrings: |-
+  Apple ROM Version
+    BIOS ID:      IM201.88Z.F000.B00.2205210113
+    Model:        IM201
+    EFI Version:  1916.0.3.0.0
+    Built by:     root@nn72l
+    Date:         Sat May 21 01:13:31 2022
+    Revision:     1916.0.3 (B&I)
+    ROM Version:  F000_B00
+    Build Type:   Official Build, RELEASE
+    Compiler:     clang-1400.0.17.3.1
+    UUID:         FD5D3CFF-B4AC-3B12-A96E-7AF9AEC0B3DF
+    UUID:         8BD9ED58-FDD7-3EAD-A4EE-C843F3C6994E
+Specifications:
+  CPUCodename:
+    - "Comet Lake"
+    - "Comet Lake"
+    - "Comet Lake"
+  CPU:
+    - "Intel Core i5-10500 @ 3.10 GHz"
+    - "Intel Core i5-10600 @ 3.30 GHz"
+    - "Intel Core i7-10700K @ 3.80 GHz"
+  GPU:
+    - "Radeon Pro 5300"
+    - "Radeon Pro 5500 XT"
+    - "Radeon Pro 5700"
+    - "Radeon Pro 5700 XT"
+  RAM:
+    - "8GB 2666 MHz DDR4 SDRAM"
+  SystemReportName:
+    - "iMac (Retina 5K, 27-inch, 2020)"
+  MarketingName:
+    # FIXME
+    - "iMac (Retina 5K, 27-inch, 2020)"
+# Note, first model code is used by macserial
+AppleModelCode:
+  - "PN5T"
+  - "PN5Y"
+  - "PN5X"
+  - "PN5W"
+  - "PN5V"
+  - "PN78"
+  - "PN7D"
+  - "PN77"
+  - "PN7C"
+# Note, first board code is used by macserial
+AppleBoardCode:
+  - "PHC1"
+  - "PHCD"
+# Note, first year is used by macserial
+AppleModelYear:
+  - 2020
+  - 2021
+  - 2022
+MinimumOSVersion: "10.15.6"
+MaximumOSVersion: null
+AppleModelId: "J185"
