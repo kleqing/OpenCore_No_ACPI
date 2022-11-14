@@ -288,14 +288,22 @@ CheckKernelAdd (
             IsLiluUsed                       = Config->Kernel.Add.Values[Index]->Enabled;
             IsDisableLinkeditJettisonEnabled = Config->Kernel.Quirks.DisableLinkeditJettison;
             if (IsLiluUsed && !IsDisableLinkeditJettisonEnabled) {
-              DEBUG ((DEBUG_WARN, "Lilu.kext在Kernel->Add[%u]处加载, 但是在Kernel->Quirks处未启用DisableLinkeditJettison!\n", Index));
+              DEBUG ((DEBUG_WARN, "Lilu.kext在Kernel->Add[%u]处加载, 但是在 Kernel->Quirks 处未启用 DisableLinkeditJettison!\n", Index));
               ++ErrorCount;
             }
+          }
+
+          //
+          // Special check for BrcmFirmwareRepo, which cannot be injected by OC.
+          //
+          if (AsciiStrCmp (BundlePath, "BrcmFirmwareRepo.kext") == 0) {
+            DEBUG ((DEBUG_WARN, "BrcmFirmwareRepo.kext 在 Kernel->Add[%u] 处不能被 OpenCore 注入, 请删除它!\n", Index));
+            ++ErrorCount;
           }
         } else {
           DEBUG ((
             DEBUG_WARN,
-            "Kernel->Add[%u] 发现 %a, 但其ExecutablePath(%a)或PlistPath(％a)不太对!\n",
+            "Kernel->Add[%u] 发现 %a, 但其 ExecutablePath(%a) 或 PlistPath(％a) 不太对!\n",
             IndexKextInfo,
             BundlePath,
             ExecutablePath,

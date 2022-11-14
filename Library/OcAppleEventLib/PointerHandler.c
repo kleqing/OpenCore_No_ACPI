@@ -47,11 +47,16 @@ WITHOUT WARRANTIES OR REPRESENTATIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED.
 #define MIN_POINTER_POLL_PERIOD  10
 #define MAX_POINTER_POLL_PERIOD  80
 
+#define MAX_CLICK_DURATION      148  // 74 for 2 ms
+#define MAX_DOUBLE_CLICK_SPEED  748  // 374 for 2 ms
+
+#define MAX_POLL_DURATION  ((MAX_UINT32 / 10000) / MAX_DOUBLE_CLICK_SPEED)
+
 GLOBAL_REMOVE_IF_UNREFERENCED UINT32  mPointerSpeedDiv = 0;
 GLOBAL_REMOVE_IF_UNREFERENCED UINT32  mPointerSpeedMul = 0;
 
-STATIC UINT16  mMaximumDoubleClickSpeed = 75; // 374 for 2 ms
-STATIC UINT16  mMaximumClickDuration    = 15; // 74 for 2 ms
+STATIC UINT16  mMaximumDoubleClickSpeed = 0;
+STATIC UINT16  mMaximumClickDuration    = 0;
 
 // MINIMAL_MOVEMENT
 #define MINIMAL_MOVEMENT  5
@@ -91,9 +96,9 @@ STATIC UINTN  mNumberOfPointerProtocols = 0;
 STATIC EFI_EVENT  mSimplePointerPollEvent = NULL;
 
 // mSimplePointerPollTime
-STATIC UINT64  mSimplePointerPollTime;
-STATIC UINT64  mSimplePointerMinPollTime = MIN_POINTER_POLL_PERIOD * 10000;
-STATIC UINT64  mSimplePointerMaxPollTime = MAX_POINTER_POLL_PERIOD * 10000;
+STATIC UINT32  mSimplePointerPollTime    = 0;
+STATIC UINT32  mSimplePointerMinPollTime = 0;
+STATIC UINT32  mSimplePointerMaxPollTime = 0;
 
 STATIC UINT32  mSimplePointerPollMask = POINTER_POLL_ALL_MASK;
 
@@ -136,8 +141,35 @@ STATIC DIMENSION  mResolution = { 800, 600 };
 STATIC UINT64  mMaxPointerResolutionX = 1;
 STATIC UINT64  mMaxPointerResolutionY = 1;
 
-STATIC INT64  mPointerRawX;
-STATIC INT64  mPointerRawY;
+STATIC UINT64  mPointerRawX;
+STATIC UINT64  mPointerRawY;
+
+STATIC UINT32     mDwellClickTimeout;
+STATIC UINT32     mDwellDoubleClickTimeout;
+STATIC UINT32     mDwellClickRadiusSqr;
+STATIC DIMENSION  mDwellPosition;
+STATIC UINT32     mDwellClickTime;
+
+VOID
+InternalInitializePointerUiScale (
+  VOID
+  )
+{
+  EFI_STATUS  Status;
+  UINTN       DataSize;
+
+  DataSize = sizeof (mUiScale);
+  Status   = gRT->GetVariable (
+                    APPLE_UI_SCALE_VARIABLE_NAME,
+                    &gAppleVendorVariableGuid,
+                    NULL,
+                    &DataSize,
+                    (VOID *)&mUiScale
+                    );
+  if (EFI_ERROR (Status) || (mUiScale != 2)) {
+    mUiScale = 1;
+  }
+}
 
 VOID
 InternalSetPointerPolling (
@@ -148,15 +180,22 @@ InternalSetPointerPolling (
 {
   if (PointerPollMin == POINTER_POLL_DEFAULT) {
     PointerPollMin = MIN_POINTER_POLL_PERIOD;
+  } else if (PointerPollMin > MAX_POLL_DURATION) {
+    PointerPollMin = MAX_POLL_DURATION;
   }
 
-  mSimplePointerMinPollTime = EFI_TIMER_PERIOD_MILLISECONDS (PointerPollMin);
+  mSimplePointerMinPollTime = PointerPollMin * 10000;
+
+  mMaximumClickDuration    = (UINT16)(MAX_CLICK_DURATION / PointerPollMin);
+  mMaximumDoubleClickSpeed = (UINT16)(MAX_DOUBLE_CLICK_SPEED / PointerPollMin);
 
   if (PointerPollMax == POINTER_POLL_DEFAULT) {
     PointerPollMax = MAX_POINTER_POLL_PERIOD;
+  } else if (PointerPollMax > MAX_POLL_DURATION) {
+    PointerPollMax = MAX_POLL_DURATION;
   }
 
-  mSimplePointerMaxPollTime = EFI_TIMER_PERIOD_MILLISECONDS (PointerPollMax);
+  mSimplePointerMaxPollTime = PointerPollMax * 10000;
 
   mSimplePointerPollMask = PointerPollMask;
 }
@@ -179,6 +218,18 @@ InternalSetPointerSpeed (
   }
 
   mPointerSpeedMul = PointerSpeedMul;
+}
+
+VOID
+InternalSetDwellClicking (
+  IN UINT16  ClickTimeout,
+  IN UINT16  DoubleClickTimeout,
+  IN UINT16  Radius
+  )
+{
+  mDwellClickTimeout       = (UINT32)ClickTimeout * 10000;
+  mDwellDoubleClickTimeout = (UINT32)DoubleClickTimeout * 10000;
+  mDwellClickRadiusSqr     = ((UINT32)Radius * Radius) * (mUiScale * mUiScale);
 }
 
 // InternalRegisterSimplePointerInterface
@@ -225,20 +276,20 @@ InternalRegisterSimplePointerInterface (
     mPointerProtocols = Instance;
 
     if (SimplePointer->Mode->ResolutionX > mMaxPointerResolutionX) {
-      mPointerRawX = MultS64x64 (mPointerRawX, (INT64)mMaxPointerResolutionX);
-      mPointerRawX = DivS64x64Remainder (
+      mPointerRawX = MultU64x64 (mPointerRawX, mMaxPointerResolutionX);
+      mPointerRawX = DivU64x64Remainder (
                        mPointerRawX,
-                       (INT64)SimplePointer->Mode->ResolutionX,
+                       SimplePointer->Mode->ResolutionX,
                        NULL
                        );
       mMaxPointerResolutionX = SimplePointer->Mode->ResolutionX;
     }
 
     if (SimplePointer->Mode->ResolutionY > mMaxPointerResolutionY) {
-      mPointerRawY = MultS64x64 (mPointerRawY, (INT64)mMaxPointerResolutionY);
-      mPointerRawY = DivS64x64Remainder (
+      mPointerRawY = MultU64x64 (mPointerRawY, mMaxPointerResolutionY);
+      mPointerRawY = DivU64x64Remainder (
                        mPointerRawY,
-                       (INT64)SimplePointer->Mode->ResolutionY,
+                       SimplePointer->Mode->ResolutionY,
                        NULL
                        );
       mMaxPointerResolutionY = SimplePointer->Mode->ResolutionY;
@@ -708,6 +759,90 @@ InternalHandleButtonInteraction (
   ++Pointer->ButtonTicksSinceClick;
 }
 
+STATIC
+VOID
+InternalResetDwellClicking (
+  VOID
+  )
+{
+  mDwellClickTime = 0;
+  CopyMem (
+    &mDwellPosition,
+    &mCursorPosition,
+    sizeof (mDwellPosition)
+    );
+}
+
+STATIC
+VOID
+InternalQueueDwellClick (
+  IN APPLE_EVENT_TYPE    EventType,
+  IN APPLE_MODIFIER_MAP  Modifiers
+  )
+{
+  APPLE_EVENT_INFORMATION  *Information;
+
+  Information = InternalCreatePointerEventQueueInformation (
+                  APPLE_EVENT_TYPE_LEFT_BUTTON | APPLE_EVENT_TYPE_MOUSE_DOWN,
+                  Modifiers
+                  );
+  if (Information != NULL) {
+    EventAddEventToQueue (Information);
+  }
+
+  Information = InternalCreatePointerEventQueueInformation (
+                  APPLE_EVENT_TYPE_LEFT_BUTTON | APPLE_EVENT_TYPE_MOUSE_UP,
+                  Modifiers
+                  );
+  if (Information != NULL) {
+    EventAddEventToQueue (Information);
+  }
+
+  Information = InternalCreatePointerEventQueueInformation (
+                  APPLE_EVENT_TYPE_LEFT_BUTTON | EventType,
+                  Modifiers
+                  );
+  if (Information != NULL) {
+    EventAddEventToQueue (Information);
+  }
+}
+
+STATIC
+VOID
+InternalHandleDwellClicking (
+  IN APPLE_MODIFIER_MAP  Modifiers
+  )
+{
+  BOOLEAN  ClickDisabled;
+  BOOLEAN  DoubleClickDisabled;
+  INT32    DistX;
+  INT32    DistY;
+
+  ClickDisabled       = mDwellClickTimeout == 0;
+  DoubleClickDisabled = mDwellDoubleClickTimeout == 0;
+  if (ClickDisabled && DoubleClickDisabled) {
+    return;
+  }
+
+  DistX = mCursorPosition.Horizontal - mDwellPosition.Horizontal;
+  DistY = mCursorPosition.Vertical - mDwellPosition.Vertical;
+  if ((UINT32)(DistX * DistX + DistY * DistY) <= mDwellClickRadiusSqr) {
+    mDwellClickTime += mSimplePointerPollTime;
+
+    if (!DoubleClickDisabled && (mDwellClickTime >= mDwellDoubleClickTimeout)) {
+      InternalQueueDwellClick (APPLE_EVENT_TYPE_MOUSE_DOUBLE_CLICK, Modifiers);
+      InternalResetDwellClicking ();
+    } else if (!ClickDisabled && (mDwellClickTime >= mDwellClickTimeout)) {
+      InternalQueueDwellClick (APPLE_EVENT_TYPE_MOUSE_CLICK, Modifiers);
+      if (DoubleClickDisabled) {
+        InternalResetDwellClicking ();
+      }
+    }
+  } else {
+    InternalResetDwellClicking ();
+  }
+}
+
 // InternalSimplePointerPollNotifyFunction
 STATIC
 VOID
@@ -735,8 +870,9 @@ InternalSimplePointerPollNotifyFunction (
   UINT64                       EndTime;
   INT64                        MaxRawPointerX;
   INT64                        MaxRawPointerY;
-  UINT64                       ClickTemp;
-  UINT64                       DoubleClickTemp;
+  UINT32                       ClickTemp;
+  UINT32                       DoubleClickTemp;
+  UINT64                       SimplePointerPollTime;
 
   StartTime = GetPerformanceCounter ();
 
@@ -803,36 +939,40 @@ InternalSimplePointerPollNotifyFunction (
         //
         // CHANGE: Fix maximum coordinates.
         //
-        mPointerRawX  += UiScaleX;
-        MaxRawPointerX = MultS64x64 (
+        ScaledX        = mPointerRawX + UiScaleX;
+        MaxRawPointerX = MultU64x64 (
                            mResolution.Horizontal - 1,
-                           (INT64)mMaxPointerResolutionX
+                           mMaxPointerResolutionX
                            );
-        if (mPointerRawX > MaxRawPointerX) {
-          mPointerRawX = MaxRawPointerX;
-        } else if (mPointerRawX < 0) {
-          mPointerRawX = 0;
+        if (ScaledX > MaxRawPointerX) {
+          ScaledX = MaxRawPointerX;
+        } else if (ScaledX < 0) {
+          ScaledX = 0;
         }
 
-        mPointerRawY  += UiScaleY;
+        mPointerRawX = (UINT64)ScaledX;
+
+        ScaledY        = mPointerRawY + UiScaleY;
         MaxRawPointerY = MultS64x64 (
                            mResolution.Vertical - 1,
                            (INT64)mMaxPointerResolutionY
                            );
-        if (mPointerRawY > MaxRawPointerY) {
-          mPointerRawY = MaxRawPointerY;
-        } else if (mPointerRawY < 0) {
-          mPointerRawY = 0;
+        if (ScaledY > MaxRawPointerY) {
+          ScaledY = MaxRawPointerY;
+        } else if (ScaledY < 0) {
+          ScaledY = 0;
         }
 
-        ScaledX = DivS64x64Remainder (
-                    mPointerRawX,
-                    (INT64)mMaxPointerResolutionX,
+        mPointerRawY = (UINT64)ScaledY;
+
+        ScaledX = DivU64x64Remainder (
+                    ScaledX,
+                    mMaxPointerResolutionX,
                     NULL
                     );
 
         ScaledY = DivS64x64Remainder (
-                    mPointerRawY,
+                    ScaledY,
                     (INT64)mMaxPointerResolutionY,
                     NULL
                     );
@@ -862,6 +1002,8 @@ InternalSimplePointerPollNotifyFunction (
 
     InternalHandleButtonInteraction (CommonStatus, &mLeftButtonInfo, Modifiers);
     InternalHandleButtonInteraction (CommonStatus, &mRightButtonInfo, Modifiers);
+
+    InternalHandleDwellClicking (Modifiers);
   }
 
   if (EFI_ERROR (CommonStatus)) {
@@ -901,28 +1043,19 @@ InternalSimplePointerPollNotifyFunction (
 
     EndTime = GetTimeInNanoSecond (EndTime - StartTime);
     // Maximum time allowed in this function is half the interval plus some margin (0.55 * 100ns)
-    if (EndTime > mSimplePointerPollTime * 55ULL) {
-      ClickTemp       = MultU64x32 (mSimplePointerPollTime, mMaximumClickDuration);
-      DoubleClickTemp = MultU64x32 (
-                          mSimplePointerPollTime,
-                          mMaximumDoubleClickSpeed
-                          );
+    if (EndTime > mSimplePointerPollTime * 55) {
+      ClickTemp       = mSimplePointerPollTime * mMaximumClickDuration;
+      DoubleClickTemp = mSimplePointerPollTime * mMaximumDoubleClickSpeed;
 
-      mSimplePointerPollTime = DivU64x32 (EndTime, 50);
-      if (mSimplePointerPollTime > mSimplePointerMaxPollTime) {
+      SimplePointerPollTime = DivU64x32 (EndTime, 50);
+      if (SimplePointerPollTime <= mSimplePointerMaxPollTime) {
+        mSimplePointerPollTime = (UINT32)SimplePointerPollTime;
+      } else {
         mSimplePointerPollTime = mSimplePointerMaxPollTime;
       }
 
-      mMaximumClickDuration = (UINT16)DivU64x64Remainder (
-                                        ClickTemp,
-                                        mSimplePointerPollTime,
-                                        NULL
-                                        );
-      mMaximumDoubleClickSpeed = (UINT16)DivU64x64Remainder (
-                                           DoubleClickTemp,
-                                           mSimplePointerPollTime,
-                                           NULL
-                                           );
+      mMaximumClickDuration    = (UINT16)(ClickTemp / mSimplePointerPollTime);
+      mMaximumDoubleClickSpeed = (UINT16)(DoubleClickTemp / mSimplePointerPollTime);
 
       gBS->SetTimer (mSimplePointerPollEvent, TimerPeriodic, mSimplePointerPollTime);
     }
@@ -936,24 +1069,9 @@ EventCreateSimplePointerPollEvent (
   )
 {
   EFI_STATUS  Status;
-  UINTN       DataSize;
   UINTN       Index;
 
   DEBUG ((DEBUG_VERBOSE, "EventCreateSimplePointerPollEvent\n"));
-
-  DataSize = sizeof (mUiScale);
-
-  Status = gRT->GetVariable (
-                  APPLE_UI_SCALE_VARIABLE_NAME,
-                  &gAppleVendorVariableGuid,
-                  NULL,
-                  &DataSize,
-                  (VOID *)&mUiScale
-                  );
-
-  if (EFI_ERROR (Status) || (mUiScale != 2)) {
-    mUiScale = 1;
-  }
 
   InternalRemoveUninstalledInstances (
     &mPointerProtocols,

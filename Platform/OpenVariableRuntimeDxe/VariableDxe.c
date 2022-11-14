@@ -45,6 +45,18 @@ EDKII_VAR_CHECK_PROTOCOL        mVarCheck = {
   VarCheckVariablePropertyGet
 };
 
+STATIC EFI_GUID  mAcpiGlobalVariableGuid = {
+  0xAF9FFD67, 0xEC10, 0x488A, { 0x9D, 0xFC, 0x6C, 0xBF, 0x5E, 0xE2, 0x2C, 0x2E }
+};
+
+STATIC
+VOID *
+  mAcpiGlobalVariable = NULL;
+
+STATIC
+UINT32
+  mAcpiGlobalVariableAttributes;
+
 /**
   Some Secure Boot Policy Variable may update following other variable changes(SecureBoot follows PK change, etc).
   Record their initial State when variable write service is ready.
@@ -397,6 +409,7 @@ VariableWriteServiceInitializeDxe (
                   EFI_NATIVE_INTERFACE,
                   NULL
                   );
+
   ASSERT_EFI_ERROR (Status);
 }
 
@@ -551,6 +564,70 @@ MapCreateEventEx (
                 );
 }
 
+STATIC
+VOID
+SaveAcpiGlobalVariable (
+  IN EFI_SYSTEM_TABLE  *SystemTable
+  )
+{
+  EFI_STATUS  Status;
+  UINTN       DataSize;
+  VOID        *Interface;
+
+  Status = gBS->LocateProtocol (&gEfiVariableArchProtocolGuid, NULL, &Interface);
+
+  if (!EFI_ERROR (Status)) {
+    //
+    // If present, we must transfer this into emulated NVRAM in order for wake from S3 sleep to work.
+    //
+    DataSize = sizeof (mAcpiGlobalVariable);
+    Status   = SystemTable->RuntimeServices->GetVariable (
+                                               L"AcpiGlobalVariable",
+                                               &mAcpiGlobalVariableGuid,
+                                               &mAcpiGlobalVariableAttributes,
+                                               &DataSize,
+                                               &mAcpiGlobalVariable
+                                               );
+
+    if (EFI_ERROR (Status)) {
+      mAcpiGlobalVariable = NULL;
+    }
+
+    DEBUG ((
+      EFI_ERROR (Status) && Status != EFI_NOT_FOUND ? DEBUG_WARN : DEBUG_INFO,
+      "Existing AcpiGlobalVariable %p 0x%x - %r\n",
+      mAcpiGlobalVariable,
+      mAcpiGlobalVariableAttributes,
+      Status
+      ));
+  }
+}
+
+STATIC
+VOID
+RestoreAcpiGlobalVariable (
+  IN EFI_SYSTEM_TABLE  *SystemTable
+  )
+{
+  EFI_STATUS  Status;
+
+  if (mAcpiGlobalVariable != NULL) {
+    Status = SystemTable->RuntimeServices->SetVariable (
+                                             L"AcpiGlobalVariable",
+                                             &mAcpiGlobalVariableGuid,
+                                             mAcpiGlobalVariableAttributes,
+                                             sizeof (mAcpiGlobalVariable),
+                                             &mAcpiGlobalVariable
+                                             );
+
+    DEBUG ((
+      EFI_ERROR (Status) ? DEBUG_WARN : DEBUG_INFO,
+      "Transfer AcpiGlobalVariable to emulated NVRAM - %r\n",
+      Status
+      ));
+  }
+}
+
 /**
   Variable Driver main entry point. The Variable driver places the 4 EFI
   runtime services in the EFI System Table and installs arch protocols
@@ -574,6 +651,8 @@ VariableServiceInitialize (
   EFI_EVENT            ReadyToBootEvent;
   EFI_EVENT            EndOfDxeEvent;
   EFI_CREATE_EVENT_EX  OriginalCreateEventEx;
+
+  SaveAcpiGlobalVariable (SystemTable);
 
   //
   // Probably worth noting that attempting to remove any pre-existing protocols here
@@ -602,10 +681,19 @@ VariableServiceInitialize (
   SystemTable->RuntimeServices->GetVariable         = VariableServiceGetVariable;
   SystemTable->RuntimeServices->GetNextVariableName = VariableServiceGetNextVariableName;
   SystemTable->RuntimeServices->SetVariable         = VariableServiceSetVariable;
-  SystemTable->RuntimeServices->QueryVariableInfo   = VariableServiceQueryVariableInfo;
+  //
+  // Avoid setting UEFI 2.x interface member on EFI 1.x.
+  //
+  if (SystemTable->RuntimeServices->Hdr.Revision >= EFI_2_00_SYSTEM_TABLE_REVISION) {
+    SystemTable->RuntimeServices->QueryVariableInfo = VariableServiceQueryVariableInfo;
+  }
 
   //
   // Now install the Variable Runtime Architectural protocol on a new handle.
+  // When we reinstall this on newer Apple firmware then the three runtime services functions
+  // above get preserved, but wrapped by additional Apple security, which is believed to have
+  // desirable functionality, e.g. possibility of writing variables to different stores,
+  // allowing them to have intended effect.
   //
   Status = gBS->InstallProtocolInterface (
                   &mHandle,
@@ -613,6 +701,7 @@ VariableServiceInitialize (
                   EFI_NATIVE_INTERFACE,
                   NULL
                   );
+
   ASSERT_EFI_ERROR (Status);
 
   if (!PcdGetBool (PcdEmuVariableNvModeEnable)) {
@@ -631,6 +720,8 @@ VariableServiceInitialize (
     // Emulated non-volatile variable mode does not depend on FVB and FTW.
     //
     VariableWriteServiceInitializeDxe ();
+
+    RestoreAcpiGlobalVariable (SystemTable);
   }
 
   OriginalCreateEventEx = gBS->CreateEventEx;
