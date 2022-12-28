@@ -615,6 +615,7 @@ InternalGetImg4ByPath (
                   (VOID **)&FileSystem
                   );
   if (EFI_ERROR (Status)) {
+    FreePool (Path);
     return EFI_NO_MEDIA;
   }
 
@@ -653,12 +654,14 @@ InternalGetImg4ByPath (
   }
 
   if (!Result) {
+    FreePool (Path);
     Root->Close (Root);
     return EFI_LOAD_ERROR;
   }
 
   ManifestBuffer = InternalReadFile (Root, Path, &ManifestSize);
 
+  FreePool (Path);
   Root->Close (Root);
 
   if (ManifestBuffer == NULL) {
@@ -915,7 +918,7 @@ OcAppleSecureBootInstallProtocol (
   if (Reinstall) {
     Status = OcUninstallAllProtocolInstances (&gAppleSecureBootProtocolGuid);
     if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "OCSB: Uninstall failed: %r\n", Status));
+      DEBUG ((DEBUG_ERROR, "OCSB: Uninstall failed - %r\n", Status));
       return NULL;
     }
   } else {

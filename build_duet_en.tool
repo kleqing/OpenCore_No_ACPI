@@ -1,9 +1,9 @@
 #!/bin/bash
-#set -x
+
 imgbuild() {
   local arch="$1"
 
-  echo "删除旧文件..."
+  echo "Erasing older files..."
   rm -f "${BUILD_DIR}/FV/DUETEFIMAINFV${arch}.z" \
     "${BUILD_DIR}/FV/DxeMain${arch}.z" \
     "${BUILD_DIR}/FV/DxeIpl${arch}.z" \
@@ -13,19 +13,19 @@ imgbuild() {
     "${BUILD_DIR}/FV/Efildr${arch}Out" \
     "${BUILD_DIR_ARCH}/boot"
 
-  echo "压缩DUETEFIMainFv.FV..."
+  echo "Compressing DUETEFIMainFv.FV..."
   LzmaCompress -e -o "${BUILD_DIR}/FV/DUETEFIMAINFV${arch}.z" \
     "${BUILD_DIR}/FV/DUETEFIMAINFV${arch}.Fv" || exit 1
 
-  echo "压缩DxeCore.efi..."
+  echo "Compressing DxeCore.efi..."
   LzmaCompress -e -o "${BUILD_DIR}/FV/DxeMain${arch}.z" \
     "${BUILD_DIR_ARCH}/DxeCore.efi" || exit 1
 
-  echo "压缩DxeIpl.efi..."
+  echo "Compressing DxeIpl.efi..."
   LzmaCompress -e -o "${BUILD_DIR}/FV/DxeIpl${arch}.z" \
     "$BUILD_DIR_ARCH/DxeIpl.efi" || exit 1
 
-  echo "生成加载程序映像..."
+  echo "Generating Loader Image..."
 
   GenFw --rebase 0x10000 -o "${BUILD_DIR_ARCH}/EfiLoaderRebased.efi" \
     "${BUILD_DIR_ARCH}/EfiLoader.efi" || exit 1
@@ -55,7 +55,7 @@ imgbuild() {
   # Build bootsectors.
   mkdir -p "${BOOTSECTORS}" || exit 1
   cd "${BOOTSECTORS}"/.. || exit 1
-  make &>/dev/null || exit 1
+  make || exit 1
   cd - || exit 1
 
   # Concatenate bootsector into the resulting image.
@@ -76,12 +76,12 @@ imgbuild() {
 
 package() {
   if [ ! -d "$1" ]; then
-    echo "$(pwd)缺少软件包目录 $1"
+    echo "Missing package directory $1 at $(pwd)"
     exit 1
   fi
-  
+
   if [ ! -d "$1"/../FV ]; then
-    echo "$(pwd)的FV目录 $1/../FV 丢失"
+    echo "Missing FV directory $1/../FV at $(pwd)"
     exit 1
   fi
 
@@ -112,7 +112,7 @@ fi
 FV_TOOLS="$(pwd)/Utilities/BaseTools/bin.${UNAME}"
 
 if [ ! -d "${FV_TOOLS}" ]; then
-  echo "错误：您需要为您的平台编译BaseTools!"
+  echo "ERROR: You need to compile BaseTools for your platform!"
   exit 1
 fi
 
@@ -132,8 +132,8 @@ if [ "${INTREE}" != "" ]; then
   # In-tree compilation is merely for packing.
   cd .. || exit 1
 
-  echo "正在编译OpenDuetPkg..."
-  build -a "${TARGETARCH}" -b "${TARGET}" -t ${TARGETCHAIN} -p OpenCorePkg/OpenDuetPkg.dsc || exit 1
+  echo "Building OpenDuetPkg..."
+  build -a "${TARGETARCH}" -b "${TARGET}" -t "${TARGETCHAIN}" -p OpenCorePkg/OpenDuetPkg.dsc || exit 1
   BUILD_DIR="${WORKSPACE}/Build/OpenDuetPkg/${TARGET}_${TARGETCHAIN}"
   BUILD_DIR_ARCH="${BUILD_DIR}/${TARGETARCH}"
   imgbuild "${TARGETARCH}"
@@ -152,5 +152,5 @@ else
   export SELFPKG
   export NO_ARCHIVES
 
-  src=$(curl -Lfs https://gitee.com/btwise/ocbuild/raw/master/efibuild.sh) && eval "$src" || exit 1
+  src=$(curl -Lfs https://raw.githubusercontent.com/acidanthera/ocbuild/master/efibuild.sh) && eval "$src" || exit 1
 fi

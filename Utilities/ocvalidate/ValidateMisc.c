@@ -89,6 +89,8 @@ MiscToolsHasDuplication (
   CONST CHAR8                *MiscToolsSecondaryArgumentsString;
   CONST CHAR8                *MiscToolsPrimaryPathString;
   CONST CHAR8                *MiscToolsSecondaryPathString;
+  BOOLEAN                    MiscToolsPrimaryFullNvramAccess;
+  BOOLEAN                    MiscToolsSecondaryFullNvramAccess;
 
   MiscToolsPrimaryEntry             = *(CONST OC_MISC_TOOLS_ENTRY **)PrimaryEntry;
   MiscToolsSecondaryEntry           = *(CONST OC_MISC_TOOLS_ENTRY **)SecondaryEntry;
@@ -96,13 +98,16 @@ MiscToolsHasDuplication (
   MiscToolsSecondaryArgumentsString = OC_BLOB_GET (&MiscToolsSecondaryEntry->Arguments);
   MiscToolsPrimaryPathString        = OC_BLOB_GET (&MiscToolsPrimaryEntry->Path);
   MiscToolsSecondaryPathString      = OC_BLOB_GET (&MiscToolsSecondaryEntry->Path);
+  MiscToolsPrimaryFullNvramAccess   = MiscToolsPrimaryEntry->FullNvramAccess;
+  MiscToolsSecondaryFullNvramAccess = MiscToolsSecondaryEntry->FullNvramAccess;
 
   if (!MiscToolsPrimaryEntry->Enabled || !MiscToolsSecondaryEntry->Enabled) {
     return FALSE;
   }
 
   if (  (AsciiStrCmp (MiscToolsPrimaryArgumentsString, MiscToolsSecondaryArgumentsString) == 0)
-     && (AsciiStrCmp (MiscToolsPrimaryPathString, MiscToolsSecondaryPathString) == 0))
+     && (AsciiStrCmp (MiscToolsPrimaryPathString, MiscToolsSecondaryPathString) == 0)
+     && (MiscToolsPrimaryFullNvramAccess == MiscToolsSecondaryFullNvramAccess))
   {
     DEBUG ((DEBUG_WARN, "Misc->Tools->Path: %a 是重复的 ", MiscToolsPrimaryPathString));
     return TRUE;
@@ -240,7 +245,7 @@ CheckMiscBoot (
      && (AsciiStrCmp (PickerMode, "External") != 0)
      && (AsciiStrCmp (PickerMode, "Apple") != 0))
   {
-    DEBUG ((DEBUG_WARN, "Misc->Boot->PickerMode is borked (Can only be Builtin, External, or Apple)!\n"));
+    DEBUG ((DEBUG_WARN, "Misc->Boot->PickerMode 不正确 (只能是Builtin, External, 或 Apple)!\n"));
     ++ErrorCount;
   } else if (HasOpenCanopyEfiDriver && (AsciiStrCmp (PickerMode, "External") != 0)) {
     DEBUG ((DEBUG_WARN, "Misc->Boot->PickerMode 不正确 (只能是Builtin, External, 或 Apple)!\n"));
@@ -542,7 +547,7 @@ CheckMiscSecurity (
     }
 
     if (((ScanPolicy & OC_SCAN_DEVICE_BITS) != 0) && ((ScanPolicy & OC_SCAN_DEVICE_LOCK) == 0)) {
-      DEBUG ((DEBUG_WARN, "Misc->Security->ScanPolicy requests scanning devices, but OC_SCAN_DEVICE_LOCK (bit 1) is not set!\n"));
+      DEBUG ((DEBUG_WARN, "Misc->Security->ScanPolicy 需要扫描设备, 但 OC_SCAN_DEVICE_LOCK (bit 1) 未设置!\n"));
       ++ErrorCount;
     }
   }

@@ -12,6 +12,7 @@
 #include <Library/DebugLib.h>
 
 #include <UserFile.h>
+#include <UserMemory.h>
 
 #define  NUM_EXTENTS  20
 
@@ -34,6 +35,11 @@ ENTRY_POINT (
   APPLE_RAM_DISK_EXTENT_TABLE  ExtentTable;
   UINT32                       Index2;
   OC_APPLE_CHUNKLIST_CONTEXT   ChunklistContext;
+
+  //
+  // Limit pool allocation size to 3072 MB
+  //
+  SetPoolAllocationSizeLimit (BASE_1GB | BASE_2GB);
 
   if (argc < 2) {
     DEBUG ((DEBUG_ERROR, "Please provide a valid Disk Image path\n"));
@@ -144,9 +150,17 @@ ContinueDmgLoop:
       OcAppleDiskImageFreeContext (&DmgContext);
     }
 
-    FreePool (Dmg);
-    FreePool (Chunklist);
-    FreePool (UncompDmg);
+    if (Dmg != NULL) {
+      FreePool (Dmg);
+    }
+
+    if (Chunklist != NULL) {
+      FreePool (Chunklist);
+    }
+
+    if (UncompDmg != NULL) {
+      FreePool (UncompDmg);
+    }
   }
 
   return 0;

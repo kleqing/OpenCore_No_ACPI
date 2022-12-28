@@ -43,7 +43,7 @@ buildutil() {
   pushd "${selfdir}/Utilities" || exit 1
   for util in "${UTILS[@]}"; do
     cd "$util" || exit 1
-    echo "构建 ${util}..."
+    echo "Building ${util}..."
     make clean || exit 1
     make -j "$cores" &>/dev/null || exit 1
     #
@@ -54,7 +54,7 @@ buildutil() {
     fi
 
     if [ "$(which i686-w64-mingw32-gcc)" != "" ]; then
-      echo "为windows构建 ${util}..."
+      echo "Building ${util} for Windows..."
       UDK_ARCH=Ia32 CC=i686-w64-mingw32-gcc STRIP=i686-w64-mingw32-strip DIST=Windows make clean || exit 1
       UDK_ARCH=Ia32 CC=i686-w64-mingw32-gcc STRIP=i686-w64-mingw32-strip DIST=Windows make -j "$cores" || exit 1
     fi
@@ -70,14 +70,14 @@ buildutil() {
 
 package() {
   if [ ! -d "$1" ]; then
-    echo "丢失包目录$1"
+    echo "Missing package directory $1"
     exit 1
   fi
 
   local ver
   ver=$(grep OPEN_CORE_VERSION ./Include/Acidanthera/Library/OcMainLib.h | sed 's/.*"\(.*\)".*/\1/' | grep -E '^[0-9.]+$')
   if [ "$ver" = "" ]; then
-    echo "无效版本 $ver"
+    echo "Invalid version $ver"
     ver="UNKNOWN"
   fi
 
@@ -115,20 +115,10 @@ package() {
       mkdir -p "${dstdir}/${arch}/${dir}" || exit 1
     done
 
-    # Mark binaries to be recognisable by OcBootManagementLib.
-    bootsig="${selfdir}/Library/OcBootManagementLib/BootSignature.bin"
-    efiOCBMs=(
-      "Bootstrap.efi"
-      "OpenCore.efi"
-      )
-    for efiOCBM in "${efiOCBMs[@]}"; do
-      dd if="${bootsig}" \
-         of="${arch}/${efiOCBM}" seek=64 bs=1 count=56 conv=notrunc || exit 1
-    done
-
     # copy OpenCore main program.
     cp "${arch}/OpenCore.efi" "${dstdir}/${arch}/EFI/OC" || exit 1
     printf "%s" "OpenCore" > "${dstdir}/${arch}/EFI/OC/.contentFlavour" || exit 1
+    printf "%s" "Disabled" > "${dstdir}/${arch}/EFI/OC/.contentVisibility" || exit 1
 
     local suffix="${arch}"
     if [ "${suffix}" = "X64" ]; then
@@ -136,6 +126,7 @@ package() {
     fi
     cp "${arch}/Bootstrap.efi" "${dstdir}/${arch}/EFI/BOOT/BOOT${suffix}.efi" || exit 1
     printf "%s" "OpenCore" > "${dstdir}/${arch}/EFI/BOOT/.contentFlavour" || exit 1
+    printf "%s" "Disabled" > "${dstdir}/${arch}/EFI/BOOT/.contentVisibility" || exit 1
 
     efiTools=(
       "BootKicker.efi"
@@ -213,7 +204,7 @@ package() {
   mkdir -p "${dstdir}/Docs/AcpiSamples/Binaries" || exit 1
   cd "${dstdir}/Docs/AcpiSamples/Source" || exit 1
   for i in *.dsl ; do
-    echo "编译dsl为aml文件......"
+    echo "build dsl to aml文件......"
     iasl -va "$i" >/dev/null || exit 1
   done
   mv ./*.aml "${dstdir}/Docs/AcpiSamples/Binaries" || exit 1
@@ -253,10 +244,10 @@ package() {
     booter="$(pwd)/../../OpenDuetPkg/${tgt}/${arch}/boot"
 
     if [ -f "${booter}" ]; then
-      echo "从 ${booter} 拷贝OpenDuetPkg启动文件..."
+      echo "Copying OpenDuetPkg boot file from ${booter}..."
       cp "${booter}" "${dstdir}/Utilities/LegacyBoot/boot${arch}" || exit 1
     else
-      echo "在${booter}找不到OpenDuetPkg!"
+      echo "Failed to find OpenDuetPkg at ${booter}!"
     fi
   done
 
@@ -307,7 +298,7 @@ NO_ARCHIVES=0
 export SELFPKG
 export NO_ARCHIVES
 
-src=$(curl -Lfs https://gitcode.net/btwise/ocbuild/-/raw/master/efibuild.sh) && eval "$src" || exit 1
+src=$(curl -Lfs https://raw.githubusercontent.com/acidanthera/ocbuild/master/efibuild.sh) && eval "$src" || exit 1
 
 cd Utilities/ocvalidate || exit 1
 ocv_tool=""
@@ -318,15 +309,15 @@ elif [ -x ./ocvalidate.exe ]; then
 fi
 
 if [ -x "$ocv_tool" ]; then
-  "$ocv_tool" ../../Docs/Sample.plist || abort "Sample.plist错误"
-  "$ocv_tool" ../../Docs/SampleCustom.plist || abort "SampleCustom.plist错误"
+  "$ocv_tool" ../../Docs/Sample.plist || abort "Wrong Sample.plist"
+  "$ocv_tool" ../../Docs/SampleCustom.plist || abort "Wrong SampleCustom.plist"
 fi
 cd ../..
 
 cd Library/OcConfigurationLib || exit 1
-echo "编译成功!"
+echo "Compile successfully!"
 echo "----------------------------------------------------------------"
-echo "运行检查架构脚本......"
-python3 ./CheckSchema.py OcConfigurationLib.c >/dev/null || abort "OccConfigurationLib.c错误"
-echo "架构检查完成！"
-echo "编译成功!" && open $BUILDDIR/Binaries
+echo "Run the check schema script......"
+./CheckSchema.py OcConfigurationLib.c >/dev/null || abort "OccConfigurationLib.c error"
+echo "Check complete！"
+echo "OK!" && open $BUILDDIR/Binaries

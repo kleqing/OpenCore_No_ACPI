@@ -1057,14 +1057,15 @@
 	<key>Misc</key>
 	<dict>
 		<key>BlessOverride</key>
-		<array>
-		</array>
+		<array/>
 		<key>Boot</key>
 		<dict>
 			<key>ConsoleAttributes</key>
 			<integer>0</integer>
 			<key>HibernateMode</key>
 			<string>None</string>
+			<key>HibernateSkipsPicker</key>
+			<false/>
 			<key>HideAuxiliary</key>
 			<true/>
 			<key>LauncherOption</key>
@@ -1082,7 +1083,7 @@
 			<key>PollAppleHotKeys</key>
 			<false/>
 			<key>ShowPicker</key>
-			<true/>
+      <true/>
 			<key>SkipCustomEntryCheck</key>
 			<true/>
 			<key>TakeoffDelay</key>
@@ -1660,11 +1661,11 @@
 		<key>SMBIOS</key>
 		<dict>
 			<key>BIOSReleaseDate</key>
-			<string>09/13/2022</string>
+			<string>10/17/2022</string>
 			<key>BIOSVendor</key>
 			<string>Acidanthera</string>
 			<key>BIOSVersion</key>
-			<string>1916.40.6.0.0</string>
+			<string>1916.60.2.0.0</string>
 			<key>BoardAssetTag</key>
 			<string></string>
 			<key>BoardLocationInChassis</key>
@@ -1998,7 +1999,7 @@
 				<key>Comment</key>
 				<string></string>
 				<key>Enabled</key>
-				<true/>
+				<false/>
 				<key>LoadEarly</key>
 				<false/>
 				<key>Path</key>
@@ -2010,7 +2011,7 @@
 				<key>Comment</key>
 				<string></string>
 				<key>Enabled</key>
-				<true/>
+				<false/>
 				<key>LoadEarly</key>
 				<false/>
 				<key>Path</key>
@@ -2022,7 +2023,7 @@
 				<key>Comment</key>
 				<string></string>
 				<key>Enabled</key>
-				<true/>
+				<false/>
 				<key>LoadEarly</key>
 				<false/>
 				<key>Path</key>
@@ -2034,7 +2035,7 @@
 				<key>Comment</key>
 				<string></string>
 				<key>Enabled</key>
-				<true/>
+				<false/>
 				<key>LoadEarly</key>
 				<false/>
 				<key>Path</key>
@@ -2046,7 +2047,7 @@
 				<key>Comment</key>
 				<string></string>
 				<key>Enabled</key>
-				<true/>
+				<false/>
 				<key>LoadEarly</key>
 				<false/>
 				<key>Path</key>
@@ -2058,7 +2059,7 @@
 				<key>Comment</key>
 				<string></string>
 				<key>Enabled</key>
-				<true/>
+				<false/>
 				<key>LoadEarly</key>
 				<false/>
 				<key>Path</key>
@@ -2070,7 +2071,7 @@
 				<key>Comment</key>
 				<string></string>
 				<key>Enabled</key>
-				<true/>
+				<false/>
 				<key>LoadEarly</key>
 				<false/>
 				<key>Path</key>
@@ -2082,7 +2083,7 @@
 				<key>Comment</key>
 				<string></string>
 				<key>Enabled</key>
-				<true/>
+				<false/>
 				<key>LoadEarly</key>
 				<false/>
 				<key>Path</key>
@@ -2094,7 +2095,7 @@
 				<key>Comment</key>
 				<string></string>
 				<key>Enabled</key>
-				<true/>
+				<false/>
 				<key>LoadEarly</key>
 				<false/>
 				<key>Path</key>
@@ -2106,7 +2107,7 @@
 				<key>Comment</key>
 				<string></string>
 				<key>Enabled</key>
-				<true/>
+				<false/>
 				<key>LoadEarly</key>
 				<false/>
 				<key>Path</key>
@@ -2118,7 +2119,7 @@
 				<key>Comment</key>
 				<string></string>
 				<key>Enabled</key>
-				<true/>
+				<false/>
 				<key>LoadEarly</key>
 				<false/>
 				<key>Path</key>
@@ -2130,7 +2131,7 @@
 				<key>Comment</key>
 				<string></string>
 				<key>Enabled</key>
-				<true/>
+				<false/>
 				<key>LoadEarly</key>
 				<false/>
 				<key>Path</key>
