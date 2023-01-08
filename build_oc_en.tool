@@ -204,7 +204,7 @@ package() {
   mkdir -p "${dstdir}/Docs/AcpiSamples/Binaries" || exit 1
   cd "${dstdir}/Docs/AcpiSamples/Source" || exit 1
   for i in *.dsl ; do
-    echo "build dsl to aml文件......"
+    echo "build dsl to aml......"
     iasl -va "$i" >/dev/null || exit 1
   done
   mv ./*.aml "${dstdir}/Docs/AcpiSamples/Binaries" || exit 1
@@ -294,9 +294,11 @@ if [ "$ARCHS" = "" ]; then
 fi
 SELFPKG=OpenCorePkg
 NO_ARCHIVES=0
+DISCARD_PACKAGES=OpenCorePkg
 
 export SELFPKG
 export NO_ARCHIVES
+export DISCARD_PACKAGES
 
 src=$(curl -Lfs https://raw.githubusercontent.com/acidanthera/ocbuild/master/efibuild.sh) && eval "$src" || exit 1
 

@@ -294,11 +294,13 @@ if [ "$ARCHS" = "" ]; then
 fi
 SELFPKG=OpenCorePkg
 NO_ARCHIVES=0
+DISCARD_PACKAGES=OpenCorePkg
 
 export SELFPKG
 export NO_ARCHIVES
+export DISCARD_PACKAGES
 
-src=$(curl -Lfs https://gitcode.net/btwise/ocbuild/-/raw/master/efibuild.sh) && eval "$src" || exit 1
+src=$(curl -Lfs https://gitee.com/btwise/ocbuild/raw/master/efibuild.sh) && eval "$src" || exit 1
 
 cd Utilities/ocvalidate || exit 1
 ocv_tool=""

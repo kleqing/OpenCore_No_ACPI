@@ -3,7 +3,7 @@
 imgbuild() {
   local arch="$1"
 
-  echo "删除旧文件..."
+  echo "Erasing older files..."
   rm -f "${BUILD_DIR}/FV/DUETEFIMAINFV${arch}.z" \
     "${BUILD_DIR}/FV/DxeMain${arch}.z" \
     "${BUILD_DIR}/FV/DxeIpl${arch}.z" \
@@ -13,15 +13,15 @@ imgbuild() {
     "${BUILD_DIR}/FV/Efildr${arch}Out" \
     "${BUILD_DIR_ARCH}/boot"
 
-  echo "压缩DUETEFIMainFv.FV..."
+  echo "Compressing DUETEFIMainFv.FV..."
   LzmaCompress -e -o "${BUILD_DIR}/FV/DUETEFIMAINFV${arch}.z" \
     "${BUILD_DIR}/FV/DUETEFIMAINFV${arch}.Fv" || exit 1
 
-  echo "压缩DxeCore.efi..."
+  echo "Compressing DxeCore.efi..."
   LzmaCompress -e -o "${BUILD_DIR}/FV/DxeMain${arch}.z" \
     "${BUILD_DIR_ARCH}/DxeCore.efi" || exit 1
 
-  echo "压缩DxeIpl.efi..."
+  echo "Compressing DxeIpl.efi..."
   LzmaCompress -e -o "${BUILD_DIR}/FV/DxeIpl${arch}.z" \
     "$BUILD_DIR_ARCH/DxeIpl.efi" || exit 1
 
@@ -55,7 +55,7 @@ imgbuild() {
   # Build bootsectors.
   mkdir -p "${BOOTSECTORS}" || exit 1
   cd "${BOOTSECTORS}"/.. || exit 1
-  make &>/dev/null || exit 1
+  make || exit 1
   cd - || exit 1
 
   # Concatenate bootsector into the resulting image.
@@ -76,12 +76,12 @@ imgbuild() {
 
 package() {
   if [ ! -d "$1" ]; then
-    echo "$(pwd)缺少软件包目录 $1"
+    echo "Missing package directory $1 at $(pwd)"
     exit 1
   fi
 
   if [ ! -d "$1"/../FV ]; then
-    echo "$(pwd)的FV目录 $1/../FV 丢失"
+    echo "Missing FV directory $1/../FV at $(pwd)"
     exit 1
   fi
 
@@ -113,7 +113,7 @@ fi
 FV_TOOLS_BUILDDIR="$(pwd)/Utilities/BaseTools"
 FV_TOOLS="$(pwd)/Utilities/BaseTools/bin.${UNAME}"
 
-echo "为你的平台编译BaseTools..."
+echo "Compiling BaseTools for your platform..."
 if [ "$UNAME" != "Windows" ]; then
   make -C "$FV_TOOLS_BUILDDIR" || exit 1
 else
@@ -121,7 +121,7 @@ else
 fi
 
 if [ ! -d "${FV_TOOLS}" ]; then
-  echo "错误：您需要为您的平台编译BaseTools!"
+  echo "ERROR: Something goes wrong while compiling BaseTools for your platform!"
   exit 1
 fi
 
@@ -129,7 +129,6 @@ if [ "${INTREE}" != "" ]; then
   # In-tree compilation is merely for packing.
   cd .. || exit 1
 
-  echo "正在构建OpenDuetPkg..."
   if [ "${TARGETARCH}" = "" ]; then
     TARGETARCH="X64"
   fi
@@ -166,5 +165,6 @@ else
   export SELFPKG
   export NO_ARCHIVES
 
+#   src=$(curl -Lfs https://raw.githubusercontent.com/acidanthera/ocbuild/master/efibuild.sh) && eval "$src" || exit 1
   src=$(curl -Lfs https://gitee.com/btwise/ocbuild/raw/master/efibuild.sh) && eval "$src" || exit 1
 fi
